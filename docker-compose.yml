@@ -1,0 +1,69 @@
+# docker-compose.yml
+version: '3.5'
+
+services:
+  ric-db:
+    restart: always
+    container_name: db
+    image: wineslab/colo-ran-dbaas:bronze
+    networks:
+      ric:
+        ipv4_address: 10.5.0.4
+
+  e2term:
+    restart: always
+    image: wineslab/colo-ran-e2term:bronze
+    volumes:
+      - ./e2term_config.conf:/opt/e2/config/config.conf:ro
+      - ./router.txt:/opt/e2/dockerRouter.txt:ro
+    networks:
+      ric:
+        ipv4_address: 10.5.0.5
+    ports:
+      - 38001:38001/sctp
+
+  e2rtmansim:
+    restart: always
+    image: wineslab/colo-ran-e2rtmansim:bronze
+    networks:
+      ric:
+        ipv4_address: 10.5.0.6
+
+  e2mgr:
+    restart: always
+    image: wineslab/colo-ran-e2mgr:bronze
+    environment:
+      RIC_ID: 7b0000-000000/18
+      DBAAS_PORT_6379_TCP_ADDR: ric-db
+      DBAAS_PORT_6379_TCP_PORT: "6379"
+      DBAAS_SERVICE_HOST: ric-db
+      DBAAS_SERCE_PORT: "6379"
+    networks:
+      ric:
+        ipv4_address: 10.5.0.7
+    volumes:
+      - "./router.txt:/opt/E2Manager/router.txt:ro"
+
+#  sample-xapp:
+#    restart: always
+#    build:
+#      context: setup
+#      dockerfile: sample-xapp/Dockerfile
+#      args:
+#        DBAAS_SERVICE_HOST: 10.5.0.4
+#        DBAAS_SERVICE_PORT: "6379"
+#    entrypoint: /bin/bash
+#    environment:
+#      DBAAS_SERVICE_HOST: 10.5.0.4
+#      DBAAS_SERVICE_PORT: "6379"
+#    networks:
+#      ric:
+#        ipv4_address: 10.5.0.8
+
+networks:
+  ric:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.5.0.0/16
+         gateway: 10.5.0.1
