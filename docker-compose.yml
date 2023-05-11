@@ -21,6 +21,8 @@ services:
         ipv4_address: 10.5.0.5
     ports:
       - 38001:38001/sctp
+    depends_on:
+      - e2mgr
 
   e2rtmansim:
     restart: always
@@ -43,6 +45,8 @@ services:
         ipv4_address: 10.5.0.7
     volumes:
       - "./router.txt:/opt/E2Manager/router.txt:ro"
+    depends_on:
+      - ric-db
 
 #  sample-xapp:
 #    restart: always
